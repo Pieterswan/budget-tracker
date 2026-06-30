@@ -1,0 +1,11 @@
+{
+  "name": "Budget Tracker",
+  "short_name": "Budget",
+  "description": "Personal monthly budget and expense tracker",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#F8F7F5",
+  "theme_color": "#4F46E5",
+  "orientation": "portrait",
+  "icons": []
+}
