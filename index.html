@@ -705,7 +705,13 @@ function renderContent() {
 }
 
 function renderOverview() {
-  const income = getIncome(), expenses = getExpenses(), balance = income - expenses;
+  const income      = getIncome();
+  const txExpenses  = getExpenses();
+  const recurTotal  = state.recurring
+    .filter(r => r.group === 'needs' || r.group === 'wants')
+    .reduce((a, r) => a + r.amount, 0);
+  const expenses    = txExpenses + recurTotal;
+  const balance     = income - expenses;
   const txs = getMonthTxs().slice().sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
   const pct = income > 0 ? Math.min(100, (expenses / income) * 100) : 0;
   const barColor = pct > 90 ? 'var(--danger)' : pct > 70 ? 'var(--warning)' : 'var(--success)';
@@ -722,12 +728,13 @@ function renderOverview() {
     <div class="card">
       <div class="card-label">Expenses</div>
       <div class="card-value expense">${fmt(expenses)}</div>
+      ${recurTotal > 0 ? `<div class="card-sub">${fmt(txExpenses)} spent · ${fmt(recurTotal)} recurring</div>` : ''}
     </div>
     <div class="card summary-wide">
-      <div class="card-label">Balance</div>
+      <div class="card-label">Balance after recurring</div>
       <div class="card-value ${balance >= 0 ? 'balance-pos' : 'balance-neg'}">${balance >= 0 ? '' : '−'}${fmt(balance)}</div>
       <div class="budget-bar-wrap">
-        <div class="budget-bar-labels"><span>Spent</span><span>${Math.round(pct)}%</span></div>
+        <div class="budget-bar-labels"><span>Committed</span><span>${Math.round(pct)}%</span></div>
         <div class="budget-bar-bg"><div class="budget-bar-fill" style="width:${pct}%;background:${barColor}"></div></div>
       </div>
     </div>
