@@ -135,7 +135,7 @@
     font-size: 16px; color: var(--text);
     cursor: pointer; display: flex; align-items: center; justify-content: center;
   }
-  .month-title { font-size: 18px; font-weight: 600; letter-spacing: -0.3px; min-width: 140px; text-align: center; }
+  .month-title { font-size: 18px; font-weight: 600; letter-spacing: -0.3px; min-width: 160px; text-align: center; }
   .header-right { display: flex; gap: 8px; align-items: center; }
   .header-add {
     background: var(--accent);
@@ -186,11 +186,11 @@
   }
   .nav-item {
     flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
-    font-size: 11px; font-weight: 500; color: var(--text-3);
+    font-size: 10px; font-weight: 500; color: var(--text-3);
     background: none; border: none; cursor: pointer; padding: 8px 4px;
     border-radius: 11px;
   }
-  .nav-item svg { width: 20px; height: 20px; }
+  .nav-item svg { width: 18px; height: 18px; }
   .nav-item.active { color: var(--accent); background: var(--surface); }
 
   /* ── Section ────────────────────────────────────── */
@@ -266,8 +266,11 @@
   .form-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
   .type-toggle { display: flex; background: var(--surface-1); border-radius: var(--radius-sm); border: 0.5px solid var(--border); padding: 3px; }
   .type-btn { flex: 1; padding: 10px; border: none; background: transparent; font-size: 14px; font-weight: 500; color: var(--text-2); border-radius: 6px; cursor: pointer; transition: all 0.15s; }
-  .type-btn.active-income { background: var(--success); color: white; }
-  .type-btn.active-expense { background: var(--danger); color: white; }
+  .type-btn.active-income  { background: var(--success); color: white; }
+  .type-btn.active-expense  { background: var(--danger);  color: white; }
+  .type-btn.active-needs    { background: var(--danger);  color: white; }
+  .type-btn.active-wants    { background: var(--warning); color: white; }
+  .type-btn.active-savings  { background: var(--success); color: white; }
   .emoji-scroll { display: flex; gap: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; padding: 4px 2px 8px; scroll-snap-type: x mandatory; scrollbar-width: none; }
   .emoji-scroll::-webkit-scrollbar { display: none; }
   .emoji-btn { font-size: 24px; min-width: 44px; height: 44px; background: var(--surface-1); border: 0.5px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; scroll-snap-align: start; }
@@ -316,6 +319,9 @@
       <button class="header-add" onclick="openAddSheet()" aria-label="Add transaction">+</button>
     </div>
   </div>
+  <div style="text-align:center;margin:2px 0 0">
+    <button id="periodLabel" onclick="openPeriodSheet()" style="font-size:11px;font-weight:400;color:var(--text-3);letter-spacing:0;background:none;border:none;cursor:pointer;padding:2px 0;font-family:inherit;white-space:nowrap;text-decoration:underline dotted;text-underline-offset:2px"></button>
+  </div>
   <nav class="bottom-nav">
     <button class="nav-item active" id="navOverview" onclick="switchTab('overview')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
@@ -328,6 +334,10 @@
     <button class="nav-item" id="navBudgets" onclick="switchTab('budgets')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
       Budgets
+    </button>
+    <button class="nav-item" id="navRecurring" onclick="switchTab('recurring')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+      Recurring
     </button>
   </nav>
 </div>
@@ -399,6 +409,67 @@
   </div>
 </div>
 
+<!-- ── ADD / EDIT RECURRING SHEET ────────────────────────────────────────────────── -->
+<div class="overlay" id="recurOverlay" onclick="closeRecurSheet(event)">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-top-bar">
+      <button class="sheet-cancel" onclick="document.getElementById('recurOverlay').classList.remove('open')">Cancel</button>
+      <div class="sheet-title" id="recurSheetTitle">Add recurring</div>
+      <button class="sheet-save" onclick="saveRecurring()">Save</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Category</label>
+      <div class="type-toggle">
+        <button class="type-btn active-needs" id="btnNeeds" onclick="setRecurGroup('needs')">Needs</button>
+        <button class="type-btn" id="btnWants" onclick="setRecurGroup('wants')">Wants</button>
+        <button class="type-btn" id="btnSavings" onclick="setRecurGroup('savings')">Savings</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Monthly amount (R)</label>
+      <input class="form-input" type="number" inputmode="decimal" id="recurAmount" placeholder="0.00" min="0" step="0.01">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <input class="form-input" type="text" id="recurName" placeholder="e.g. Car Payment">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notes (optional)</label>
+      <input class="form-input" type="text" id="recurNotes" placeholder="e.g. Due on the 1st">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Icon</label>
+      <div class="emoji-scroll" id="recurEmojiGrid"></div>
+    </div>
+    <button class="delete-btn" id="deleteRecurBtn" style="display:none;margin:0 20px 16px;width:calc(100% - 40px)" onclick="deleteRecurring()">Delete recurring item</button>
+  </div>
+</div>
+
+<!-- ── SET PERIOD SHEET ────────────────────────────────────────────────────────── -->
+<div class="overlay" id="periodOverlay" onclick="closePeriodSheet(event)">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-top-bar">
+      <button class="sheet-cancel" onclick="document.getElementById('periodOverlay').classList.remove('open')">Cancel</button>
+      <div class="sheet-title">Set period dates</div>
+      <button class="sheet-save" onclick="savePeriodSheet()">Save</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Period start (payday)</label>
+      <input class="form-input" type="date" id="periodStart">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Period end (last day)</label>
+      <input class="form-input" type="date" id="periodEnd">
+    </div>
+    <div class="form-group">
+      <p style="font-size:13px;color:var(--text-3);line-height:1.6">Customise exact dates for <strong id="periodMonthLabel" style="color:var(--text-2)"></strong>. Each month can have its own dates to match your actual payday.</p>
+    </div>
+    <button class="delete-btn" style="margin:0 20px 16px;width:calc(100% - 40px)" onclick="clearPeriodSheet()">Reset to default (25th–24th)</button>
+  </div>
+</div>
+
 <!-- ── FIREBASE SDK (compat v10) ─────────────────────────────────────────────── -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -429,15 +500,34 @@ const db   = firebase.firestore();
 const EMOJIS = ['🛒','🍔','🍕','☕','🍷','🚗','⛽','🚌','✈️','🏠','💡','💧','📱','💻','👗','👟','💊','🏥','🎬','🎮','📚','🎵','🏋️','🐾','💰','💳','🎁','🏦','💼','🛍️','🧴','🧹','📦','🔧','🌿','☀️','🌙','⭐','❤️','🎯'];
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
+// ── BUDGET PERIOD HELPERS ────────────────────────────────────────────────────
+// Budget cycle: paid on ~25th, money is FOR the following month.
+// e.g. "July" budget = Jun 25 → Jul 24  (paid Jun 25, budgeting for July)
+function getInitialPeriod() {
+  const now = new Date();
+  let month = now.getMonth();
+  let year  = now.getFullYear();
+  if (now.getDate() >= 25) { // On/after 25th → next month's budget has started
+    if (++month > 11) { month = 0; year++; }
+  }
+  return { month, year };
+}
+const _init = getInitialPeriod();
+
 // ── STATE ─────────────────────────────────────────────────────────────────────
 let state = {
-  currentMonth:     new Date().getMonth(),
-  currentYear:      new Date().getFullYear(),
+  currentMonth:     _init.month,
+  currentYear:      _init.year,
   activeTab:        'overview',
   transactions:     [],
   budgets:          [],
+  periods:          {},
+  recurring:        [],
   editingTxId:      null,
+  editingRecurId:   null,
   editingBudgetId:  null,
+  recurGroup:       'needs',
+  recurEmoji:       '🏠',
   txType:           'expense',
   txEmoji:          '🛒',
   budgetEmoji:      '💰'
@@ -498,12 +588,17 @@ auth.onAuthStateChanged(async user => {
 // ── FIRESTORE DATA ────────────────────────────────────────────────────────────
 async function loadFromFirestore() {
   try {
-    const [txSnap, budgetSnap] = await Promise.all([
+    const [txSnap, budgetSnap, periodSnap, recurSnap] = await Promise.all([
       db.collection('transactions').get(),
-      db.collection('budgets').get()
+      db.collection('budgets').get(),
+      db.collection('periods').get(),
+      db.collection('recurring').get()
     ]);
     state.transactions = txSnap.docs.map(d => d.data());
     state.budgets      = budgetSnap.docs.map(d => d.data());
+    state.periods      = {};
+    periodSnap.docs.forEach(d => { state.periods[d.id] = d.data(); });
+    state.recurring    = recurSnap.docs.map(d => d.data());
   } catch (e) {
     console.error('Failed to load data from Firestore:', e);
   }
@@ -523,6 +618,14 @@ function fsSetBudget(b) {
 }
 function fsDeleteBudget(id) {
   db.collection('budgets').doc(id).delete()
+    .catch(e => console.error('Firestore delete error:', e));
+}
+function fsSetRecurring(r) {
+  db.collection('recurring').doc(r.id).set(r)
+    .catch(e => console.error('Firestore write error:', e));
+}
+function fsDeleteRecurring(id) {
+  db.collection('recurring').doc(id).delete()
     .catch(e => console.error('Firestore delete error:', e));
 }
 
@@ -550,11 +653,19 @@ function showLoading(visible) {
 function fmt(n) {
   return 'R ' + Math.abs(n).toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
-function getMonthKey() {
-  return `${state.currentYear}-${String(state.currentMonth + 1).padStart(2, '0')}`;
+function getPeriodBounds() {
+  const key = `${state.currentYear}-${String(state.currentMonth + 1).padStart(2,'0')}`;
+  if (state.periods[key]) return state.periods[key]; // custom override
+  // Default: start = 25th of previous month, end = 24th of current month
+  let sy = state.currentYear, sm = state.currentMonth - 1;
+  if (sm < 0) { sm = 11; sy--; }
+  const start = `${sy}-${String(sm + 1).padStart(2,'0')}-25`;
+  const end   = `${state.currentYear}-${String(state.currentMonth + 1).padStart(2,'0')}-24`;
+  return { start, end };
 }
 function getMonthTxs() {
-  return state.transactions.filter(t => t.date && t.date.startsWith(getMonthKey()));
+  const { start, end } = getPeriodBounds();
+  return state.transactions.filter(t => t.date && t.date >= start && t.date <= end);
 }
 function getIncome()   { return getMonthTxs().filter(t => t.type === 'income').reduce((a, t) => a + t.amount, 0); }
 function getExpenses() { return getMonthTxs().filter(t => t.type === 'expense').reduce((a, t) => a + t.amount, 0); }
@@ -569,7 +680,7 @@ function changeMonth(d) {
 
 function switchTab(tab) {
   state.activeTab = tab;
-  ['overview', 'transactions', 'budgets'].forEach(t => {
+  ['overview', 'transactions', 'budgets', 'recurring'].forEach(t => {
     document.getElementById('nav' + t.charAt(0).toUpperCase() + t.slice(1))
       .classList.toggle('active', t === tab);
   });
@@ -578,7 +689,10 @@ function switchTab(tab) {
 
 // ── RENDER ────────────────────────────────────────────────────────────────────
 function render() {
+  const { start, end } = getPeriodBounds();
+  const fmtD = s => `${parseInt(s.slice(8))} ${MONTHS[parseInt(s.slice(5,7))-1].slice(0,3)}`;
   document.getElementById('monthTitle').textContent = `${MONTHS[state.currentMonth]} ${state.currentYear}`;
+  document.getElementById('periodLabel').textContent = `${fmtD(start)} \u2013 ${fmtD(end)} \u270e`;
   renderContent();
 }
 
@@ -586,7 +700,8 @@ function renderContent() {
   const el = document.getElementById('mainContent');
   if (state.activeTab === 'overview')          el.innerHTML = renderOverview();
   else if (state.activeTab === 'transactions') el.innerHTML = renderTransactions();
-  else                                          el.innerHTML = renderBudgets();
+  else if (state.activeTab === 'budgets')      el.innerHTML = renderBudgets();
+  else                                          el.innerHTML = renderRecurring();
 }
 
 function renderOverview() {
@@ -838,6 +953,169 @@ function deleteBudget() {
   document.getElementById('budgetOverlay').classList.remove('open');
   render();
 }
-</script>
+
+// ── PERIOD SHEET ──────────────────────────────────────────────────────────────
+function openPeriodSheet() {
+  const { start, end } = getPeriodBounds();
+  document.getElementById('periodStart').value = start;
+  document.getElementById('periodEnd').value   = end;
+  document.getElementById('periodMonthLabel').textContent =
+    `${MONTHS[state.currentMonth]} ${state.currentYear}`;
+  document.getElementById('periodOverlay').classList.add('open');
+}
+function closePeriodSheet(e) {
+  if (e.target === document.getElementById('periodOverlay'))
+    document.getElementById('periodOverlay').classList.remove('open');
+}
+function savePeriodSheet() {
+  const start = document.getElementById('periodStart').value;
+  const end   = document.getElementById('periodEnd').value;
+  if (!start || !end) { alert('Please select both dates.'); return; }
+  if (start >= end)   { alert('Start date must be before end date.'); return; }
+  const key = `${state.currentYear}-${String(state.currentMonth + 1).padStart(2,'0')}`;
+  state.periods[key] = { start, end };
+  db.collection('periods').doc(key).set({ start, end })
+    .catch(e => console.error('Firestore write error:', e));
+  document.getElementById('periodOverlay').classList.remove('open');
+  render();
+}
+function clearPeriodSheet() {
+  if (!confirm('Reset to default 25th–24th dates?')) return;
+  const key = `${state.currentYear}-${String(state.currentMonth + 1).padStart(2,'0')}`;
+  delete state.periods[key];
+  db.collection('periods').doc(key).delete()
+    .catch(e => console.error('Firestore delete error:', e));
+  document.getElementById('periodOverlay').classList.remove('open');
+  render();
+}
+// ── RECURRING SHEET ──────────────────────────────────────────────────────────
+function setRecurGroup(g) {
+  state.recurGroup = g;
+  document.getElementById('btnNeeds').className   = 'type-btn' + (g === 'needs'   ? ' active-needs'   : '');
+  document.getElementById('btnWants').className   = 'type-btn' + (g === 'wants'   ? ' active-wants'   : '');
+  document.getElementById('btnSavings').className = 'type-btn' + (g === 'savings' ? ' active-savings' : '');
+}
+function setRecurEmoji(e) { state.recurEmoji = e; buildEmojiGrid('recurEmojiGrid', e, 'setRecurEmoji'); }
+
+function openAddRecurring(group) {
+  state.editingRecurId = null;
+  state.recurGroup  = group || 'needs';
+  state.recurEmoji  = '🏠';
+  document.getElementById('recurSheetTitle').textContent   = 'Add recurring item';
+  document.getElementById('recurAmount').value             = '';
+  document.getElementById('recurName').value               = '';
+  document.getElementById('recurNotes').value              = '';
+  document.getElementById('deleteRecurBtn').style.display  = 'none';
+  setRecurGroup(state.recurGroup);
+  buildEmojiGrid('recurEmojiGrid', state.recurEmoji, 'setRecurEmoji');
+  document.getElementById('recurOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('recurAmount').focus(), 300);
+}
+
+function openEditRecurring(id) {
+  const r = state.recurring.find(x => x.id === id);
+  if (!r) return;
+  state.editingRecurId = id;
+  state.recurGroup  = r.group;
+  state.recurEmoji  = r.emoji || '🏠';
+  document.getElementById('recurSheetTitle').textContent   = 'Edit recurring item';
+  document.getElementById('recurAmount').value             = r.amount;
+  document.getElementById('recurName').value               = r.name;
+  document.getElementById('recurNotes').value              = r.notes || '';
+  document.getElementById('deleteRecurBtn').style.display  = '';
+  setRecurGroup(r.group);
+  buildEmojiGrid('recurEmojiGrid', state.recurEmoji, 'setRecurEmoji');
+  document.getElementById('recurOverlay').classList.add('open');
+}
+
+function closeRecurSheet(e) {
+  if (e.target === document.getElementById('recurOverlay'))
+    document.getElementById('recurOverlay').classList.remove('open');
+}
+
+function saveRecurring() {
+  const name   = document.getElementById('recurName').value.trim();
+  const amount = parseFloat(document.getElementById('recurAmount').value);
+  if (!name || !amount) { alert('Enter a name and amount.'); return; }
+  const r = {
+    id:     state.editingRecurId || Date.now().toString(),
+    name,
+    amount: Math.abs(amount),
+    group:  state.recurGroup,
+    notes:  document.getElementById('recurNotes').value.trim(),
+    emoji:  state.recurEmoji
+  };
+  if (state.editingRecurId) {
+    state.recurring = state.recurring.map(x => x.id === state.editingRecurId ? r : x);
+  } else {
+    state.recurring.push(r);
+  }
+  fsSetRecurring(r);
+  document.getElementById('recurOverlay').classList.remove('open');
+  renderContent();
+}
+
+function deleteRecurring() {
+  if (!confirm('Delete this recurring item?')) return;
+  const id = state.editingRecurId;
+  state.recurring = state.recurring.filter(r => r.id !== id);
+  fsDeleteRecurring(id);
+  document.getElementById('recurOverlay').classList.remove('open');
+  renderContent();
+}
+
+// ── RENDER RECURRING ────────────────────────────────────────────────────────
+function renderRecurring() {
+  const groups  = ['needs', 'wants', 'savings'];
+  const glabels = { needs: 'Needs', wants: 'Wants', savings: 'Savings / Investments' };
+  const gemoji  = { needs: '🏠', wants: '🎮', savings: '💰' };
+  const totals  = {};
+  groups.forEach(g => {
+    totals[g] = state.recurring.filter(r => r.group === g).reduce((a, r) => a + r.amount, 0);
+  });
+  const grand = totals.needs + totals.wants + totals.savings;
+
+  const summaryHTML = `
+  <div class="summary">
+    <div class="card">
+      <div class="card-label">Needs</div>
+      <div class="card-value expense">${fmt(totals.needs)}</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Wants</div>
+      <div class="card-value" style="color:var(--warning)">${fmt(totals.wants)}</div>
+    </div>
+    <div class="card summary-wide">
+      <div class="card-label">Savings / Investments</div>
+      <div class="card-value income">${fmt(totals.savings)}</div>
+      <div class="card-sub">Total committed monthly: ${fmt(grand)}</div>
+    </div>
+  </div>`;
+
+  const sectionsHTML = groups.map(g => {
+    const items = state.recurring.filter(r => r.group === g);
+    const rowsHTML = items.length
+      ? `<div class="tx-list">${items.map(r => `
+          <div class="tx-item" onclick="openEditRecurring('${r.id}')">
+            <div class="tx-emoji">${r.emoji || gemoji[g]}</div>
+            <div class="tx-info">
+              <div class="tx-name">${escHtml(r.name)}</div>
+              ${r.notes ? `<div class="tx-cat">${escHtml(r.notes)}</div>` : ''}
+            </div>
+            <div class="tx-amount expense">${fmt(r.amount)}</div>
+          </div>`).join('')}</div>`
+      : `<div class="empty-state" style="padding:16px 20px"><div class="empty-text">No ${g} items yet. Tap + Add.</div></div>`;
+
+    return `<div class="section">
+      <div class="section-header">
+        <span class="section-title">${glabels[g]}</span>
+        <button class="section-action" onclick="openAddRecurring('${g}')">+ Add</button>
+      </div>
+      ${rowsHTML}
+    </div>`;
+  }).join('');
+
+  return summaryHTML + `<div class="pb-section">${sectionsHTML}</div>`;
+}</script>
 </body>
 </html>
